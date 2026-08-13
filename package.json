@@ -1,0 +1,4 @@
+{
+  "name":"sum-repair-locator","version":"2.0.0","private":true,"type":"module",
+  "scripts":{"dev":"python3 -m http.server 4173","update:data":"node scripts/update-stores.mjs","test":"node scripts/validate.mjs","build":"node scripts/build.mjs"}
+}
