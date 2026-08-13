@@ -42,7 +42,7 @@ function createCard(store) {
   if (!store.badge && !store.importSpecialist) badges.append(makeBadge('SUM 聯盟保修'));
   card.querySelector('.store-code').textContent = store.code;
   card.querySelector('h3').textContent = store.name;
-  const rating = card.querySelector('.rating-badge');
+  const rating = card.querySelector('.rating-badge'); rating.href = store.placeId ? `https://search.google.com/local/reviews?placeid=${encodeURIComponent(store.placeId)}` : store.mapUrl;
   if (store.rating === null) { rating.classList.add('empty'); rating.querySelector('strong').textContent = '尚無評分'; rating.querySelector('span').textContent = ''; }
   else { rating.querySelector('strong').textContent = store.rating.toFixed(1); rating.querySelector('span').textContent = reviewLabel(store); }
   const address = card.querySelector('.address'); address.textContent = `${store.area}${store.zone}${store.address}`; address.href = store.mapUrl;
