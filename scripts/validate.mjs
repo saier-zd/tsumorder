@@ -8,6 +8,6 @@ for (const store of payload.stores) {
   if (store.reviewCount !== null && store.reviewCount < 0) errors.push(`${store.code}: invalid review count`);
 }
 if (new Set(payload.stores.map(s => `${s.code}|${s.placeId}`)).size !== payload.stores.length) errors.push('Duplicate store key remains');
-for (const file of ['index.html','styles.css','app.js','netlify.toml','assets/sum-baby.png','assets/sum-baby-wave.png']) await access(file);
+for (const file of ['index.html','order.html','styles.css','order.css','app.js','order.js','netlify.toml','assets/sum-baby.png','assets/sum-baby-wave.png']) await access(file);
 if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
 console.log(`Validated ${payload.stores.length} stores; ${payload.stores.filter(s=>s.rating!==null).length} rated; ${payload.stores.filter(s=>s.importSpecialist).length} import specialists.`);
