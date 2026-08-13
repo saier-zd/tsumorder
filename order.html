@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#e60012"><meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="SUM 汽車保修線上預約：先選需求、據點與時間，最後留下聯絡資料，3 分鐘完成。">
+  <meta property="og:title" content="SUM 汽車保修｜線上快速預約"><meta property="og:description" content="不用懂車，從症狀開始選，快速找到適合的 SUM 服務據點。"><meta property="og:type" content="website"><meta property="og:image" content="/assets/sum-social.jpg">
+  <link rel="icon" href="/assets/sum-baby.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/order.css">
+  <title>SUM 汽車保修｜線上預約</title>
+</head>
+<body class="booking-page">
+  <header class="site-header"><a class="brand" href="/" aria-label="SUM 汽車保修首頁"><span>SUM</span><small>汽車保修聯盟</small></a><nav aria-label="主要導覽"><a href="/">據點查詢</a><a class="active" href="/order">線上預約</a><a class="support-link" href="tel:0800523168">需要協助？0800-523-168</a></nav></header>
+  <main class="booking-shell">
+    <section class="booking-intro">
+      <div><p class="eyebrow">ONLINE BOOKING</p><h1>預約保養維修，<br><em>不用先懂車。</em></h1><p>先告訴我們遇到的狀況，選擇方便的據點與時間；聯絡資料放最後再填，減少不必要的步驟。</p></div>
+      <img src="/assets/sum-baby-wave.png" alt="SUM 寶寶為你引導預約">
+    </section>
+
+    <div class="booking-layout">
+      <section class="booking-card" aria-labelledby="bookingTitle">
+        <div class="progress-wrap">
+          <div class="progress-copy"><span id="stepCounter">步驟 1／4</span><strong id="bookingTitle">今天想處理什麼？</strong></div>
+          <ol class="stepper" aria-label="預約進度"><li class="active"><i>1</i><span>需求</span></li><li><i>2</i><span>據點</span></li><li><i>3</i><span>時間</span></li><li><i>4</i><span>資料</span></li></ol>
+        </div>
+
+        <form id="bookingForm" name="sum-booking" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
+          <input type="hidden" name="form-name" value="sum-booking"><input class="honeypot" name="bot-field" tabindex="-1" autocomplete="off">
+          <input type="hidden" name="service" id="serviceValue"><input type="hidden" name="store_id" id="storeIdValue"><input type="hidden" name="store_code" id="storeCodeValue"><input type="hidden" name="store_name" id="storeNameValue"><input type="hidden" name="booking_date" id="dateValue"><input type="hidden" name="booking_time" id="timeValue"><input type="hidden" name="source" id="sourceValue">
+
+          <section class="form-step active" data-step="1" aria-label="選擇服務需求">
+            <div class="step-heading"><h2>從最接近的狀況開始選</h2><p>不知道原因也沒關係，到店會先檢查再說明。</p></div>
+            <div class="service-options" id="serviceOptions">
+              <button type="button" data-service="定期保養"><span>定期保養</span><small>機油、濾芯、里程保養</small><b>最常預約</b></button>
+              <button type="button" data-service="冷氣系統"><span>冷氣系統</span><small>不冷、異味、冷媒檢查</small></button>
+              <button type="button" data-service="故障燈／異音"><span>故障燈／異音</span><small>亮燈、抖動、底盤異音</small></button>
+              <button type="button" data-service="輪胎／煞車"><span>輪胎／煞車</span><small>磨耗、異音、行車安全</small></button>
+              <button type="button" data-service="電瓶／電系"><span>電瓶／電系</span><small>發不動、充電系統、燈具</small></button>
+              <button type="button" data-service="其他需求"><span>其他需求</span><small>先描述狀況，讓技師判斷</small></button>
+            </div>
+            <label class="full-field"><span>補充車況（選填）</span><textarea name="vehicle_issue" rows="3" placeholder="例如：冷氣有風但不冷、右前方經過坑洞有聲音……"></textarea></label>
+          </section>
+
+          <section class="form-step" data-step="2" aria-label="選擇服務據點">
+            <div class="step-heading"><h2>選擇方便前往的據點</h2><p id="storeHint">可依地區或店名搜尋，評價與官方標章都保留給你參考。</p></div>
+            <div class="store-filters"><label><span>縣市</span><select id="bookingArea"><option value="">全台縣市</option></select></label><label><span>行政區</span><select id="bookingZone" disabled><option value="">全部行政區</option></select></label><label class="booking-search"><span>搜尋店名／地址</span><input id="bookingKeyword" type="search" placeholder="例如：汐止、保新、板橋"></label></div>
+            <div class="booking-store-list" id="bookingStoreList" aria-live="polite"></div><button class="show-more-stores" id="showMoreStores" type="button" hidden>顯示更多據點</button>
+          </section>
+
+          <section class="form-step" data-step="3" aria-label="選擇日期時間">
+            <div class="step-heading"><h2>選擇方便到店的時間</h2><p>先選希望時段，據點會再與你確認，避免現場久候。</p></div>
+            <div class="selected-store-banner" id="selectedStoreBanner"></div>
+            <div class="date-options" id="dateOptions"></div>
+            <h3 class="time-title">可選時段</h3><div class="time-options" id="timeOptions"></div>
+            <p class="availability-note">※ 顯示時段依據點營業時間提供；送出後仍以店家最終聯絡確認為準。</p>
+          </section>
+
+          <section class="form-step" data-step="4" aria-label="填寫聯絡資料">
+            <div class="step-heading"><h2>最後，留下聯絡方式</h2><p>據點只會用於確認車況與預約，不需先註冊會員。</p></div>
+            <div class="contact-grid"><label><span>姓名 *</span><input name="name" autocomplete="name" required placeholder="請輸入姓名"></label><label><span>手機號碼 *</span><input name="phone" inputmode="tel" autocomplete="tel" required pattern="09[0-9]{8}" placeholder="例：0912345678"></label><label><span>汽車品牌（選填）</span><select name="vehicle_brand"><option value="">稍後再提供</option><option>TOYOTA</option><option>HONDA</option><option>NISSAN</option><option>FORD</option><option>MAZDA</option><option>MITSUBISHI</option><option>LEXUS</option><option>BMW</option><option>Mercedes-Benz</option><option>其他</option></select></label><label><span>車牌號碼（選填）</span><input name="plate" autocomplete="off" placeholder="例：ABC-1234"></label></div>
+            <label class="consent"><input type="checkbox" name="privacy_consent" value="同意" required><span>我已閱讀並同意個人資料蒐集與使用說明，資料僅供本次預約聯繫使用。</span></label>
+            <p class="form-error" id="formError" role="alert"></p>
+          </section>
+
+          <div class="form-actions"><button class="back-button" id="backButton" type="button">返回據點查詢</button><button class="next-button" id="nextButton" type="button" disabled>下一步</button></div>
+        </form>
+
+        <section class="booking-success" id="bookingSuccess" hidden><div class="success-check">✓</div><p class="eyebrow">REQUEST RECEIVED</p><h2>預約資料已送出</h2><p><strong id="successStore"></strong> 將依你留下的手機號碼，與你確認車況及到店時間。</p><div id="successSummary"></div><a href="/">回到據點查詢</a></section>
+      </section>
+
+      <aside class="booking-summary" aria-label="目前預約內容"><p class="eyebrow">YOUR BOOKING</p><h2>預約內容</h2><dl><div><dt>服務需求</dt><dd id="summaryService">尚未選擇</dd></div><div><dt>服務據點</dt><dd id="summaryStore">尚未選擇</dd></div><div><dt>希望時間</dt><dd id="summaryTime">尚未選擇</dd></div></dl><div class="summary-assurance"><b>送出後才進入確認</b><p>據點會先與你核對車況和時間，確認後才算預約完成。</p></div><a href="tel:0800523168">不確定怎麼選？撥 0800-523-168</a></aside>
+    </div>
+  </main>
+  <footer><div class="footer-brand"><strong>SUM</strong><span>實在就是 SUM</span></div><p>線上預約送出後，由服務據點聯絡確認車況與到店時間。</p><div><a href="/">據點查詢</a><a href="tel:0800523168">0800-523-168</a></div></footer>
+  <script src="/order.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+const DATA_URL = '/data/stores.json';
+const $ = id => document.getElementById(id);
+const state = { step: 1, stores: [], filtered: [], service: '', store: null, date: '', time: '', visibleStores: 6 };
+const cityOrder = ['基隆市','臺北市','新北市','桃園市','新竹縣','新竹市','苗栗縣','臺中市','彰化縣','南投縣','雲林縣','嘉義縣','嘉義市','臺南市','高雄市','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣'];
+const titles = ['今天想處理什麼？','選擇方便的服務據點','選擇希望到店的時間','留下聯絡資料'];
+const form = $('bookingForm');
+
+function track(event, params = {}) {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event, booking_step: state.step, ...params });
+  if (typeof window.gtag === 'function') window.gtag('event', event, params);
+}
+
+function setStep(next) {
+  state.step = Math.max(1, Math.min(4, next));
+  document.querySelectorAll('.form-step').forEach(el => el.classList.toggle('active', Number(el.dataset.step) === state.step));
+  document.querySelectorAll('.stepper li').forEach((el, index) => { el.classList.toggle('active', index + 1 <= state.step); el.classList.toggle('done', index + 1 < state.step); });
+  $('stepCounter').textContent = `步驟 ${state.step}／4`; $('bookingTitle').textContent = titles[state.step - 1];
+  $('backButton').textContent = state.step === 1 ? '返回據點查詢' : '上一步'; $('nextButton').textContent = state.step === 4 ? '送出預約' : '下一步';
+  updateNext(); track('booking_step_view', { step_name: ['service','store','datetime','contact'][state.step - 1] });
+  window.scrollTo({ top: document.querySelector('.booking-layout').offsetTop - 88, behavior: 'smooth' });
+}
+
+function updateSummary() {
+  $('summaryService').textContent = state.service || '尚未選擇';
+  $('summaryStore').textContent = state.store ? state.store.name : '尚未選擇';
+  $('summaryTime').textContent = state.date && state.time ? `${state.date} ${state.time}` : '尚未選擇';
+  $('serviceValue').value = state.service; $('storeIdValue').value = state.store?.id || ''; $('storeCodeValue').value = state.store?.code || ''; $('storeNameValue').value = state.store?.name || ''; $('dateValue').value = state.date; $('timeValue').value = state.time;
+}
+
+function updateNext() {
+  const valid = state.step === 1 ? !!state.service : state.step === 2 ? !!state.store : state.step === 3 ? !!state.date && !!state.time : true;
+  $('nextButton').disabled = !valid;
+}
+
+function fillAreas() {
+  [...new Set(state.stores.map(s => s.area))].sort((a,b) => cityOrder.indexOf(a) - cityOrder.indexOf(b)).forEach(area => $('bookingArea').add(new Option(area, area)));
+}
+
+function fillZones() {
+  const area = $('bookingArea').value; const zone = $('bookingZone'); zone.innerHTML = '<option value="">全部行政區</option>';
+  [...new Set(state.stores.filter(s => s.area === area).map(s => s.zone))].sort().forEach(value => zone.add(new Option(value, value))); zone.disabled = !area;
+}
+
+function filterStores() {
+  const area = $('bookingArea').value; const zone = $('bookingZone').value; const keyword = $('bookingKeyword').value.trim().toLowerCase();
+  state.filtered = state.stores.filter(s => (!area || s.area === area) && (!zone || s.zone === zone) && (!keyword || `${s.name}${s.code}${s.area}${s.zone}${s.address}`.toLowerCase().includes(keyword)));
+  state.filtered.sort((a,b) => Number(b.badge === '金鑽') - Number(a.badge === '金鑽') || (b.rating ?? -1) - (a.rating ?? -1) || (b.reviewCount ?? -1) - (a.reviewCount ?? -1));
+  state.visibleStores = 6; renderStores();
+}
+
+function renderStores() {
+  const list = $('bookingStoreList'); list.replaceChildren(...state.filtered.slice(0, state.visibleStores).map(store => {
+    const button = document.createElement('button'); button.type = 'button'; button.className = `booking-store${state.store?.id === store.id ? ' selected' : ''}`;
+    const tags = [store.badge, store.importSpecialist ? '進口車專修' : ''].filter(Boolean);
+    button.innerHTML = `<div><h3>${store.name}</h3><p>${store.area}${store.zone}${store.address}<br>${store.businessHours || '營業時間請電話洽詢'}</p><div class="mini-badges">${tags.map(tag => `<span>${tag}</span>`).join('')}</div></div><div class="store-score"><b>${store.rating === null ? '—' : `★ ${store.rating.toFixed(1)}`}</b><small>${store.reviewCount === null ? '尚無評論資料' : `${store.reviewCount.toLocaleString('zh-TW')} 則`}</small></div>`;
+    button.addEventListener('click', () => selectStore(store)); return button;
+  }));
+  if (!state.filtered.length) list.innerHTML = '<p class="availability-note">沒有符合條件的據點，請調整地區或搜尋文字。</p>';
+  $('showMoreStores').hidden = state.visibleStores >= state.filtered.length;
+}
+
+function selectStore(store) {
+  state.store = store; state.date = ''; state.time = ''; renderStores(); renderDates(); updateSummary(); updateNext();
+  track('booking_store_select', { store_id: store.id, store_name: store.name });
+}
+
+function nextDates() {
+  const dates = []; const cursor = new Date(); cursor.setHours(12,0,0,0);
+  for (let offset = 1; dates.length < 8 && offset <= 16; offset++) { const date = new Date(cursor); date.setDate(cursor.getDate() + offset); if (date.getDay() !== 0) dates.push(date); }
+  return dates;
+}
+
+function dateLabel(date) { return `${date.getMonth()+1}/${date.getDate()}`; }
+function dateValue(date) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+function weekday(date) { return ['日','一','二','三','四','五','六'][date.getDay()]; }
+
+function renderDates() {
+  if (!state.store) return;
+  $('selectedStoreBanner').innerHTML = `<b>${state.store.name}</b><span>${state.store.area}${state.store.zone}${state.store.address}・${state.store.businessHours || '營業時間請電話洽詢'}</span>`;
+  $('dateOptions').replaceChildren(...nextDates().map(date => {
+    const value = dateValue(date); const button = document.createElement('button'); button.type = 'button'; button.className = state.date === value ? 'selected' : ''; button.innerHTML = `<span>${dateLabel(date)}</span><small>週${weekday(date)}</small>`;
+    button.addEventListener('click', () => { state.date = value; state.time = ''; renderDates(); updateSummary(); updateNext(); }); return button;
+  }));
+  const slots = ['09:00','10:30','13:30','15:00','16:30','18:00'];
+  $('timeOptions').replaceChildren(...slots.map(slot => { const button = document.createElement('button'); button.type = 'button'; button.textContent = slot; button.disabled = !state.date; button.className = state.time === slot ? 'selected' : ''; button.addEventListener('click', () => { state.time = slot; renderDates(); updateSummary(); updateNext(); }); return button; }));
+}
+
+function validateContact() {
+  const name = form.elements.name; const phone = form.elements.phone; const consent = form.elements.privacy_consent;
+  if (!name.value.trim()) return showError('請輸入姓名。', name);
+  if (!/^09\d{8}$/.test(phone.value.replace(/[\s-]/g,''))) return showError('請輸入正確的 10 碼手機號碼。', phone);
+  phone.value = phone.value.replace(/[\s-]/g,'');
+  if (!consent.checked) return showError('請勾選個人資料使用同意。', consent);
+  $('formError').textContent = ''; return true;
+}
+
+function showError(message, field) { $('formError').textContent = message; field.focus(); return false; }
+
+async function submitBooking() {
+  if (!validateContact()) return;
+  $('nextButton').disabled = true; $('nextButton').textContent = '送出中…'; track('quick_reserve_submit', { service: state.service, store_id: state.store.id, store_name: state.store.name });
+  try {
+    const response = await fetch('/order.html', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:new URLSearchParams(new FormData(form)).toString() });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    form.hidden = true; document.querySelector('.progress-wrap').hidden = true; $('bookingSuccess').hidden = false; $('successStore').textContent = state.store.name; $('successSummary').textContent = `${state.service}｜${state.date} ${state.time}`;
+    track('booking_success', { service: state.service, store_id: state.store.id, store_name: state.store.name }); window.scrollTo({ top: document.querySelector('.booking-card').offsetTop - 88, behavior:'smooth' });
+  } catch (error) { $('formError').textContent = '目前暫時無法送出，請稍後再試，或撥 0800-523-168 由客服協助。'; $('nextButton').disabled = false; $('nextButton').textContent = '重新送出'; console.error(error); }
+}
+
+function bindEvents() {
+  $('serviceOptions').addEventListener('click', event => { const button = event.target.closest('[data-service]'); if (!button) return; state.service = button.dataset.service; document.querySelectorAll('[data-service]').forEach(el => el.classList.toggle('selected', el === button)); updateSummary(); updateNext(); track('booking_service_select', { service: state.service }); });
+  $('bookingArea').addEventListener('change', () => { fillZones(); filterStores(); }); $('bookingZone').addEventListener('change', filterStores); $('bookingKeyword').addEventListener('input', filterStores);
+  $('showMoreStores').addEventListener('click', () => { state.visibleStores += 6; renderStores(); });
+  $('backButton').addEventListener('click', () => state.step === 1 ? location.assign('/') : setStep(state.step - 1));
+  $('nextButton').addEventListener('click', () => { if (state.step < 4) setStep(state.step + 1); else submitBooking(); });
+  form.addEventListener('submit', event => { event.preventDefault(); submitBooking(); });
+}
+
+async function init() {
+  const params = new URLSearchParams(location.search); $('sourceValue').value = params.get('from') || document.referrer || 'direct';
+  try { const response = await fetch(DATA_URL); if (!response.ok) throw new Error(`HTTP ${response.status}`); const payload = await response.json(); state.stores = payload.stores; state.filtered = [...state.stores]; fillAreas();
+    const storeId = params.get('store'); const selected = storeId ? state.stores.find(store => store.id === storeId) : null;
+    if (selected) { $('bookingArea').value = selected.area; fillZones(); $('bookingZone').value = selected.zone; state.store = selected; filterStores(); $('storeHint').textContent = `已從據點查詢帶入「${selected.name}」，你也可以改選其他店家。`; }
+    else filterStores(); renderDates(); updateSummary(); bindEvents(); setStep(1); track('booking_start', { source: $('sourceValue').value });
+  } catch (error) { document.querySelector('.booking-card').innerHTML = '<div class="booking-success"><h2>據點資料暫時無法載入</h2><p>請稍後再試，或撥 0800-523-168 由客服協助預約。</p><a href="/">返回據點查詢</a></div>'; console.error(error); }
+}
+
+init();
