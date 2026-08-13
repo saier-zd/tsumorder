@@ -6,7 +6,6 @@ const collator = new Intl.Collator('zh-Hant');
 
 function escapeText(value = '') { return String(value).trim(); }
 function reviewLabel(store) { return store.reviewCount === null ? '尚無評論資料' : `${store.reviewCount.toLocaleString('zh-TW')} 則評論`; }
-function officialUrl(path) { return `https://www.sum.com.tw/repair/${path}`; }
 
 function fillAreas() {
   const order = ['基隆市','臺北市','新北市','桃園市','新竹縣','新竹市','苗栗縣','臺中市','彰化縣','南投縣','雲林縣','嘉義縣','嘉義市','臺南市','高雄市','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣'];
@@ -50,7 +49,7 @@ function createCard(store) {
   const phone = card.querySelector('.phone'); phone.textContent = store.phone || store.mobile || '請洽 SUM 客服';
   const experience = card.querySelector('.experience'); experience.textContent = store.experience || '提供 SUM 專業保養與維修服務。';
   const map = card.querySelector('.map-button'); map.href = store.mapUrl;
-  const book = card.querySelector('.book-button'); book.href = officialUrl(`order.php?country=${encodeURIComponent(store.area)}&store=${encodeURIComponent(store.id)}`);
+  const book = card.querySelector('.book-button'); book.href = `/order?store=${encodeURIComponent(store.id)}&from=locator`;
   card.querySelector('.rating-date').textContent = store.rating === null ? 'SUM 官網尚未提供 Google 評價資料' : 'Google 評價資料更新：2026/08/13';
   card.querySelector('.share-button').addEventListener('click', () => shareStore(store));
   return card;
