@@ -44,6 +44,7 @@
             <div class="step-heading"><h2>選擇方便前往的據點</h2><p id="storeHint">可依目前位置、地區或店名搜尋，評價與官方標章都保留給你參考。</p></div>
             <div class="location-panel"><button id="useLocation" type="button"><span>⌖</span><strong>使用目前位置</strong><small>推薦離你較近的 SUM 據點</small></button><p id="locationStatus" role="status" aria-live="polite">定位只會在你按下按鈕後啟用。</p></div>
             <div class="store-filters"><label><span>縣市</span><select id="bookingArea"><option value="">全台縣市</option></select></label><label><span>行政區</span><select id="bookingZone" disabled><option value="">全部行政區</option></select></label><label class="booking-search"><span>搜尋店名／地址</span><input id="bookingKeyword" type="search" placeholder="例如：汐止、保新、板橋"></label></div>
+            <div class="booking-recommendation" id="bookingRecommendation" role="status" aria-live="polite" hidden><div><strong></strong><span></span></div><button id="bookingRecommendationLocation" type="button">開啟定位，精準推薦</button></div>
             <div class="booking-store-list" id="bookingStoreList" aria-live="polite"></div><button class="show-more-stores" id="showMoreStores" type="button" hidden>顯示更多據點</button>
           </section>
 

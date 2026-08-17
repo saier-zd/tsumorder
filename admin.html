@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#e60012">
+  <link rel="icon" href="/assets/sum-baby.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><link rel="stylesheet" href="/admin.css">
+  <title>SUM 據點標籤管理</title>
+</head>
+<body>
+  <header><a href="/" aria-label="返回據點查詢"><strong>SUM</strong><span>據點標籤管理</span></a><a href="/" target="_blank" rel="noopener">查看前台 ↗</a></header>
+  <main>
+    <section class="admin-hero"><div><p>ADMIN SETTINGS</p><h1>一次修改，<br>全站標籤同步。</h1><span>管理名稱與各加盟店資格；儲存後據點查詢與預約頁會共用同一份設定。</span></div><img src="/assets/sum-baby-wave.png" alt=""></section>
+    <section class="panel labels-panel">
+      <div class="panel-title"><div><small>全站名稱</small><h2>標籤文字</h2></div><p>修改顯示名稱不會改變店家分類，例如把「金鑽」改成「優選」即可同步更新所有相關店家。</p></div>
+      <div class="label-grid"><label>第一級標章<input id="tierA" maxlength="40"></label><label>第二級標章<input id="tierB" maxlength="40"></label><label>篩選器名稱<input id="tierFilter" maxlength="40"></label><label>進口車專修名稱<input id="importLabel" maxlength="40"></label><label>油電車專修名稱<input id="hybridLabel" maxlength="40"></label></div>
+    </section>
+    <section class="panel stores-panel">
+      <div class="panel-title stores-title"><div><small>加盟店資格</small><h2>店家標籤</h2></div><label class="store-search">搜尋店名、代碼或地址<input id="storeSearch" type="search" placeholder="例如：板橋、S1AA01"></label></div>
+      <div class="table-wrap"><table><thead><tr><th>加盟店</th><th>縣市／行政區</th><th>評鑑標章</th><th>油電車專修</th></tr></thead><tbody id="storeRows"></tbody></table></div>
+      <button id="showAll" type="button" class="show-all" hidden>顯示全部店家</button>
+    </section>
+  </main>
+  <div class="save-bar"><label>管理密碼<input id="adminToken" type="password" autocomplete="current-password" placeholder="輸入後才能儲存"></label><div><span id="saveStatus" role="status" aria-live="polite"></span><button id="exportSettings" type="button">下載設定備份</button><button id="saveSettings" type="button">儲存並同步前台</button></div></div>
+  <script src="/admin.js" type="module"></script>
+</body>
+</html>
