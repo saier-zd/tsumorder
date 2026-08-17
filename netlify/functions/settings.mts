@@ -26,7 +26,7 @@ const headers = {
   'Cache-Control': 'no-store',
   'X-Content-Type-Options': 'nosniff'
 };
-const fallbackTokenHash = '5a61d7f1b3b02c819e32d6ffe1f299deb104bad4481c520b462eb23333077ec8';
+const fallbackTokenHash = 'deb5496eb34eea5098a7cf9482f4bded8899e2b6efbfc24aa138ed2e7d20a3ab';
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers });
 
 function tokenMatches(provided: string, expected?: string) {
