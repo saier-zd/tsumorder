@@ -1,7 +1,7 @@
-const DATA_URL = '/data/stores.json';
+import { distanceLabel, fillCityOptions, fillDistrictOptions, filterWithDistrictFallback, loadSiteData, setDistances } from './shared.js';
+
 const $ = id => document.getElementById(id);
-const state = { step: 1, stores: [], filtered: [], service: '', store: null, date: '', time: '', visibleStores: 3, userLocation: null, storePreset: false };
-const cityOrder = ['基隆市','臺北市','新北市','桃園市','新竹縣','新竹市','苗栗縣','臺中市','彰化縣','南投縣','雲林縣','嘉義縣','嘉義市','臺南市','高雄市','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣'];
+const state = { step: 1, stores: [], districts: null, settings: null, filtered: [], service: '', store: null, date: '', time: '', visibleStores: 3, userLocation: null, storePreset: false, recommendationMode: 'direct' };
 const titles = ['今天想處理什麼？','選擇方便的服務據點','選擇希望到店的時間','留下聯絡資料'];
 const form = $('bookingForm');
 
@@ -35,51 +35,42 @@ function updateNext() {
 }
 
 function fillAreas() {
-  [...new Set(state.stores.map(s => s.area))].sort((a,b) => cityOrder.indexOf(a) - cityOrder.indexOf(b)).forEach(area => $('bookingArea').add(new Option(area, area)));
+  fillCityOptions($('bookingArea'), state.stores);
 }
 
 function fillZones() {
-  const area = $('bookingArea').value; const zone = $('bookingZone'); zone.innerHTML = '<option value="">全部行政區</option>';
-  [...new Set(state.stores.filter(s => s.area === area).map(s => s.zone))].sort().forEach(value => zone.add(new Option(value, value))); zone.disabled = !area;
-}
-
-function toRadians(value) { return value * Math.PI / 180; }
-const cityCenters = {'基隆市':[25.13,121.74],'臺北市':[25.04,121.56],'新北市':[25.02,121.47],'桃園市':[24.99,121.30],'新竹縣':[24.83,121.01],'新竹市':[24.81,120.97],'苗栗縣':[24.56,120.82],'臺中市':[24.15,120.68],'彰化縣':[24.07,120.54],'南投縣':[23.96,120.97],'雲林縣':[23.71,120.43],'嘉義縣':[23.45,120.33],'嘉義市':[23.48,120.45],'臺南市':[23.00,120.23],'高雄市':[22.63,120.31],'屏東縣':[22.55,120.55],'宜蘭縣':[24.68,121.75],'花蓮縣':[23.99,121.60],'臺東縣':[22.76,121.15],'澎湖縣':[23.57,119.58],'金門縣':[24.45,118.38],'連江縣':[26.16,119.95]};
-function validCoordinates(store) {
-  if (!Array.isArray(store.coordinates) || store.coordinates.length !== 2) return false;
-  const [lat, lon] = store.coordinates.map(Number);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < 21.7 || lat > 26.5 || lon < 118 || lon > 122.5) return false;
-  const center = cityCenters[store.area]; return !center || distanceKm(center[0], center[1], lat, lon) < 145;
-}
-function distanceKm(lat1, lon1, lat2, lon2) {
-  const earth = 6371; const dLat = toRadians(lat2 - lat1); const dLon = toRadians(lon2 - lon1);
-  const value = Math.sin(dLat / 2) ** 2 + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) ** 2;
-  return earth * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
-}
-function calculateDistances() {
-  if (!state.userLocation) return;
-  state.stores.forEach(store => {
-    store.distance = validCoordinates(store) ? distanceKm(state.userLocation.latitude, state.userLocation.longitude, Number(store.coordinates[0]), Number(store.coordinates[1])) : null;
-  });
+  fillDistrictOptions($('bookingZone'), $('bookingArea').value, state.districts, state.stores);
 }
 
 function filterStores() {
   const area = $('bookingArea').value; const zone = $('bookingZone').value; const keyword = $('bookingKeyword').value.trim().toLowerCase();
-  state.filtered = state.stores.filter(s => (!area || s.area === area) && (!zone || s.zone === zone) && (!keyword || `${s.name}${s.code}${s.area}${s.zone}${s.address}`.toLowerCase().includes(keyword)));
-  state.filtered.sort((a,b) => state.userLocation ? (a.distance ?? Infinity) - (b.distance ?? Infinity) || (b.rating ?? -1) - (a.rating ?? -1) : Number(b.badge === '金鑽') - Number(a.badge === '金鑽') || (b.rating ?? -1) - (a.rating ?? -1) || (b.reviewCount ?? -1) - (a.reviewCount ?? -1));
+  const result = filterWithDistrictFallback({ stores: state.stores, districts: state.districts, area, zone, keyword, userLocation: state.userLocation });
+  state.filtered = result.stores; state.recommendationMode = result.mode;
+  state.filtered.sort((a,b) => state.recommendationMode !== 'direct' ? (a.recommendationDistance ?? Infinity) - (b.recommendationDistance ?? Infinity) || (b.rating ?? -1) - (a.rating ?? -1) : state.userLocation ? (a.distance ?? Infinity) - (b.distance ?? Infinity) || (b.rating ?? -1) - (a.rating ?? -1) : Number(b.serviceMeta.tier === 'tierA') - Number(a.serviceMeta.tier === 'tierA') || (b.rating ?? -1) - (a.rating ?? -1) || (b.reviewCount ?? -1) - (a.reviewCount ?? -1));
   state.visibleStores = 3; renderStores();
 }
 
 function renderStores() {
   const list = $('bookingStoreList'); list.replaceChildren(...state.filtered.slice(0, state.visibleStores).map(store => {
     const button = document.createElement('button'); button.type = 'button'; button.className = `booking-store${state.store?.id === store.id ? ' selected' : ''}`;
-    const tags = [store.badge, store.importSpecialist ? '進口車專修' : ''].filter(Boolean);
-    const distance = store.distance === null || store.distance === undefined ? '' : `<em class="distance">距離約 ${store.distance < 10 ? store.distance.toFixed(1) : Math.round(store.distance)} km</em>`;
+    const tags = [store.serviceMeta.tierLabel, store.serviceMeta.importSpecialist ? state.settings.labels.importSpecialist : '', store.serviceMeta.hybridSpecialist ? state.settings.labels.hybridSpecialist : ''].filter(Boolean);
+    const shownDistance = distanceLabel(store, state.recommendationMode !== 'direct');
+    const distance = shownDistance ? `<em class="distance">${state.recommendationMode === 'district-fallback' ? '距行政區中心' : '距目前位置'}約 ${shownDistance}</em>` : '';
     button.innerHTML = `<div><h3>${store.name}</h3>${distance}<p>${store.area}${store.zone}${store.address}<br>${store.businessHours || '營業時間請電話洽詢'}</p><div class="mini-badges">${tags.map(tag => `<span>${tag}</span>`).join('')}</div></div><div class="store-score"><b>${store.rating === null ? '—' : `★ ${store.rating.toFixed(1)}`}</b><small>${store.reviewCount === null ? '尚無評論資料' : `${store.reviewCount.toLocaleString('zh-TW')} 則`}</small></div>`;
     button.addEventListener('click', () => selectStore(store)); return button;
   }));
   if (!state.filtered.length) list.innerHTML = '<p class="availability-note">沒有符合條件的據點，請調整地區或搜尋文字。</p>';
   $('showMoreStores').hidden = state.visibleStores >= state.filtered.length;
+  renderRecommendation();
+}
+
+function renderRecommendation() {
+  const notice = $('bookingRecommendation');
+  if (state.recommendationMode === 'direct') { notice.hidden = true; return; }
+  notice.hidden = false; const place = `${$('bookingArea').value}${$('bookingZone').value}`;
+  notice.querySelector('strong').textContent = `${place}目前沒有加盟店`;
+  if (state.recommendationMode === 'location-fallback') { notice.querySelector('span').textContent = '以下已依你的目前位置推薦最近據點。'; notice.querySelector('button').hidden = true; }
+  else { notice.querySelector('span').textContent = '以下依行政區中心推薦鄰近據點；開啟定位會更準確。'; notice.querySelector('button').hidden = false; }
 }
 
 function selectStore(store) {
@@ -110,13 +101,13 @@ function renderDates() {
   $('timeOptions').replaceChildren(...slots.map(slot => { const button = document.createElement('button'); button.type = 'button'; button.textContent = slot; button.disabled = !state.date; button.className = state.time === slot ? 'selected' : ''; button.addEventListener('click', () => { state.time = slot; renderDates(); updateSummary(); updateNext(); }); return button; }));
 }
 
-function requestLocation() {
+function requestLocation(preserveSelection = false) {
   const button = $('useLocation'); const status = $('locationStatus');
   if (!navigator.geolocation) { status.textContent = '此瀏覽器不支援定位，請改用縣市或行政區搜尋。'; track('booking_location_unavailable'); return; }
   button.disabled = true; button.classList.add('loading'); status.textContent = '正在取得你的位置…'; track('booking_location_request');
   navigator.geolocation.getCurrentPosition(position => {
-    state.userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude }; state.store = null; state.storePreset = false; state.date = ''; state.time = ''; calculateDistances();
-    $('bookingArea').value = ''; fillZones(); $('bookingKeyword').value = ''; filterStores();
+    state.userLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude }; state.store = null; state.storePreset = false; state.date = ''; state.time = ''; setDistances(state.stores, state.userLocation);
+    if (!preserveSelection) { $('bookingArea').value = ''; fillZones(); $('bookingKeyword').value = ''; } filterStores();
     button.classList.remove('loading'); button.classList.add('located'); button.querySelector('strong').textContent = '已使用目前位置'; status.textContent = '已依距離重新排序，實際行車距離請以導航為準。'; button.disabled = false;
     updateSummary(); updateNext(); track('booking_location_success', { accuracy: Math.round(position.coords.accuracy || 0) });
   }, error => {
@@ -151,7 +142,8 @@ function bindEvents() {
   $('serviceOptions').addEventListener('click', event => { const button = event.target.closest('[data-service]'); if (!button) return; state.service = button.dataset.service; document.querySelectorAll('[data-service]').forEach(el => el.classList.toggle('selected', el === button)); updateSummary(); updateNext(); track('booking_service_select', { service: state.service }); });
   const clearHiddenStore = () => { if (state.store && !state.filtered.some(store => store.id === state.store.id)) { state.store = null; state.storePreset = false; state.date = ''; state.time = ''; renderStores(); updateSummary(); updateNext(); } };
   $('bookingArea').addEventListener('change', () => { fillZones(); filterStores(); clearHiddenStore(); }); $('bookingZone').addEventListener('change', () => { filterStores(); clearHiddenStore(); }); $('bookingKeyword').addEventListener('input', () => { filterStores(); clearHiddenStore(); });
-  $('useLocation').addEventListener('click', requestLocation);
+  $('useLocation').addEventListener('click', () => requestLocation(false));
+  $('bookingRecommendationLocation').addEventListener('click', () => requestLocation(true));
   $('showMoreStores').addEventListener('click', () => { state.visibleStores += 6; renderStores(); });
   $('backButton').addEventListener('click', () => state.step === 1 ? location.assign('/') : state.step === 3 && state.storePreset ? setStep(1) : setStep(state.step - 1));
   $('nextButton').addEventListener('click', () => { if (state.step === 1 && state.storePreset && state.store) setStep(3); else if (state.step < 4) setStep(state.step + 1); else submitBooking(); });
@@ -160,7 +152,7 @@ function bindEvents() {
 
 async function init() {
   const params = new URLSearchParams(location.search); $('sourceValue').value = params.get('from') || document.referrer || 'direct';
-  try { const response = await fetch(DATA_URL); if (!response.ok) throw new Error(`HTTP ${response.status}`); const payload = await response.json(); state.stores = payload.stores; state.filtered = [...state.stores]; fillAreas();
+  try { const { stores, districts, settings } = await loadSiteData(); state.stores = stores; state.districts = districts; state.settings = settings; state.filtered = [...state.stores]; fillAreas();
     const storeId = params.get('store'); const selected = storeId ? state.stores.find(store => store.id === storeId) : null;
     if (selected) { $('bookingArea').value = selected.area; fillZones(); $('bookingZone').value = selected.zone; state.store = selected; state.storePreset = true; filterStores(); $('storeHint').textContent = `已從據點查詢帶入「${selected.name}」，你也可以改選其他店家。`; }
     else filterStores(); renderDates(); updateSummary(); bindEvents(); setStep(1); track('booking_start', { source: $('sourceValue').value });

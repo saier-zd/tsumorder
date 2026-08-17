@@ -1,4 +1,5 @@
 {
   "name":"sum-repair-locator","version":"2.0.0","private":true,"type":"module",
-  "scripts":{"dev":"python3 -m http.server 4173","update:data":"node scripts/update-stores.mjs","test":"node scripts/validate.mjs","build":"node scripts/build.mjs"}
+  "scripts":{"dev":"python3 -m http.server 4173","update:data":"node scripts/update-stores.mjs","update:districts":"node scripts/update-districts.mjs","test":"node scripts/validate.mjs","build":"node scripts/build.mjs"},
+  "dependencies":{"@netlify/blobs":"^10.0.8","@netlify/functions":"^4.2.6"}
 }
