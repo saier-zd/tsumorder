@@ -42,7 +42,9 @@ function collectSettings() {
     const id = row.dataset.storeId; const tier = row.querySelector('.tier-select').value; const hybridSpecialist = row.querySelector('.hybrid-check').checked;
     const current = { ...(settings.storeOverrides[id] || {}) };
     if (tier === 'inherit') delete current.tier; else current.tier = tier;
-    if (hybridSpecialist) current.hybridSpecialist = true; else delete current.hybridSpecialist;
+    if (hybridSpecialist) current.hybridSpecialist = true;
+    else if (Object.prototype.hasOwnProperty.call(DEFAULT_SETTINGS.storeOverrides, id) || Object.prototype.hasOwnProperty.call(current, 'hybridSpecialist')) current.hybridSpecialist = false;
+    else delete current.hybridSpecialist;
     if (Object.keys(current).length) settings.storeOverrides[id] = current; else delete settings.storeOverrides[id];
   });
   return settings;

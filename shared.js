@@ -11,7 +11,14 @@ export const DEFAULT_SETTINGS = {
     importSpecialist: '進口車專修廠',
     hybridSpecialist: '油電車專修廠'
   },
-  storeOverrides: {}
+  storeOverrides: {
+    '235': { hybridSpecialist: true },
+    '500': { hybridSpecialist: true },
+    '450': { hybridSpecialist: true },
+    '496': { hybridSpecialist: true },
+    '51': { hybridSpecialist: true },
+    '286': { hybridSpecialist: true }
+  }
 };
 
 const cityCenters = {'基隆市':[25.13,121.74],'臺北市':[25.04,121.56],'新北市':[25.02,121.47],'桃園市':[24.99,121.30],'新竹縣':[24.83,121.01],'新竹市':[24.81,120.97],'苗栗縣':[24.56,120.82],'臺中市':[24.15,120.68],'彰化縣':[24.07,120.54],'南投縣':[23.96,120.97],'雲林縣':[23.71,120.43],'嘉義縣':[23.45,120.33],'嘉義市':[23.48,120.45],'臺南市':[23.00,120.23],'高雄市':[22.63,120.31],'屏東縣':[22.55,120.55],'宜蘭縣':[24.68,121.75],'花蓮縣':[23.99,121.60],'臺東縣':[22.76,121.15],'澎湖縣':[23.57,119.58],'金門縣':[24.45,118.38],'連江縣':[26.16,119.95]};
@@ -20,7 +27,7 @@ export function normalizeSettings(value = {}) {
   return {
     version: 1,
     labels: { ...DEFAULT_SETTINGS.labels, ...(value.labels || {}) },
-    storeOverrides: value.storeOverrides && typeof value.storeOverrides === 'object' ? value.storeOverrides : {}
+    storeOverrides: { ...DEFAULT_SETTINGS.storeOverrides, ...(value.storeOverrides && typeof value.storeOverrides === 'object' ? value.storeOverrides : {}) }
   };
 }
 
@@ -107,7 +114,7 @@ export function setDistances(stores, location, key = 'distance') {
   });
 }
 
-export function filterWithDistrictFallback({ stores, districts, area, zone, keyword = '', minRating = 0, importOnly = false, hybridOnly = false, tierOnly = false, userLocation = null }) {
+export function filterWithDistrictFallback({ stores, districts, area, zone, keyword = '', minRating = 0, importOnly = false, hybridOnly = false, selectedTier = '', userLocation = null }) {
   const normalizedKeyword = keyword.trim().toLocaleLowerCase('zh-TW');
   const matchesOtherFilters = store => {
     const haystack = `${store.name} ${store.code} ${store.area}${store.zone}${store.address}`.toLocaleLowerCase('zh-TW');
@@ -115,7 +122,7 @@ export function filterWithDistrictFallback({ stores, districts, area, zone, keyw
       && (!minRating || (store.rating !== null && store.rating >= minRating))
       && (!importOnly || store.serviceMeta.importSpecialist)
       && (!hybridOnly || store.serviceMeta.hybridSpecialist)
-      && (!tierOnly || store.serviceMeta.tier);
+      && (!selectedTier || store.serviceMeta.tier === selectedTier);
   };
   const base = stores.filter(matchesOtherFilters);
   const selectedDistrictCount = area && zone ? stores.filter(store => store.area === area && store.zone === zone).length : null;

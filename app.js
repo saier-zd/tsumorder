@@ -15,7 +15,9 @@ function applyLabels() {
   const labels = state.settings.labels;
   $('importOnlyLabel').textContent = labels.importSpecialist;
   $('hybridOnlyLabel').textContent = labels.hybridSpecialist;
-  $('tierOnlyLabel').textContent = labels.tierFilter;
+  $('tierFilterLabel').textContent = labels.tierFilter;
+  $('tierAOption').textContent = labels.tierA;
+  $('tierBOption').textContent = labels.tierB;
   $('importStatLabel').textContent = labels.importSpecialist;
   $('hybridStatLabel').textContent = labels.hybridSpecialist;
   $('heroImportLabel').textContent = `✓ ${labels.importSpecialist}`;
@@ -37,8 +39,8 @@ function sortStores(list) {
 function filterStores() {
   const result = filterWithDistrictFallback({
     stores: state.stores, districts: state.districts, area: $('area').value, zone: $('zone').value,
-    keyword: $('keyword').value, minRating: Number($('rating').value), importOnly: $('importOnly').checked,
-    hybridOnly: $('hybridOnly').checked, tierOnly: $('tierOnly').checked, userLocation: state.userLocation
+    keyword: $('keyword').value, minRating: $('goodRatingOnly').checked ? 4 : 0, importOnly: $('importOnly').checked,
+    hybridOnly: $('hybridOnly').checked, selectedTier: $('tier').value, userLocation: state.userLocation
   });
   state.filtered = result.stores; state.recommendationMode = result.mode; sortStores(state.filtered); state.visible = PAGE_SIZE; render();
 }
@@ -68,9 +70,9 @@ function renderRecommendation() {
   const notice = $('recommendationNotice');
   if (state.recommendationMode === 'direct') { notice.hidden = true; return; }
   const area = $('area').value; const zone = $('zone').value; notice.hidden = false;
-  notice.querySelector('strong').textContent = `${area}${zone}尚無據點，以下推薦鄰近店家`;
+  notice.querySelector('strong').textContent = `${area}${zone}目前沒有加盟店`;
   if (state.recommendationMode === 'location-fallback') { notice.querySelector('span').textContent = '已依你的目前位置推薦最近的 SUM 據點。'; notice.querySelector('button').hidden = true; }
-  else { notice.querySelector('span').textContent = '開啟定位會更精準'; notice.querySelector('button').hidden = false; }
+  else { notice.querySelector('span').textContent = '以下依行政區中心推薦鄰近店家；開啟定位會更精準。'; notice.querySelector('button').hidden = false; }
 }
 
 function render() {

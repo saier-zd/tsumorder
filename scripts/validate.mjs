@@ -20,6 +20,14 @@ const locationFallback = filterWithDistrictFallback({ stores: decorated, distric
 if (locationFallback.mode !== 'location-fallback' || !locationFallback.stores.length) errors.push('Location fallback failed');
 const sample = decorateStore(payload.stores[0], normalizeSettings({ labels: { tierA: '優選' }, storeOverrides: { [payload.stores[0].id]: { tier: 'tierA', hybridSpecialist: true } } }));
 if (sample.serviceMeta.tierLabel !== '優選' || !sample.serviceMeta.hybridSpecialist) errors.push('Dynamic store label override failed');
+const settings = normalizeSettings();
+const decoratedStores = payload.stores.map(store => decorateStore(store, settings));
+const googleGood = filterWithDistrictFallback({ stores: decoratedStores, districts, minRating: 4 });
+if (!googleGood.stores.length || googleGood.stores.some(store => Number(store.rating) < 4)) errors.push('Google rating checkbox filter failed');
+const tierAStores = filterWithDistrictFallback({ stores: decoratedStores, districts, selectedTier: 'tierA' });
+if (!tierAStores.stores.length || tierAStores.stores.some(store => store.serviceMeta.tier !== 'tierA')) errors.push('Tier dropdown filter failed');
+const seededHybrid = decoratedStores.find(store => String(store.id) === '235');
+if (!seededHybrid?.serviceMeta.hybridSpecialist) errors.push('Seeded hybrid specialist badge failed');
 for (const file of ['index.html','order.html','admin.html','styles.css','order.css','admin.css','app.js','order.js','admin.js','shared.js','netlify.toml','netlify/functions/settings.mts','assets/sum-baby.png','assets/sum-baby-wave.png']) await access(file);
 if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
 console.log(`Validated ${payload.stores.length} stores and ${districts.count} districts; ${payload.stores.filter(s=>s.rating!==null).length} rated; ${payload.stores.filter(s=>s.importSpecialist).length} import specialists.`);

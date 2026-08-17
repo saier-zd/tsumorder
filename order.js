@@ -53,10 +53,14 @@ function filterStores() {
 function renderStores() {
   const list = $('bookingStoreList'); list.replaceChildren(...state.filtered.slice(0, state.visibleStores).map(store => {
     const button = document.createElement('button'); button.type = 'button'; button.className = `booking-store${state.store?.id === store.id ? ' selected' : ''}`;
-    const tags = [store.serviceMeta.tierLabel, store.serviceMeta.importSpecialist ? state.settings.labels.importSpecialist : '', store.serviceMeta.hybridSpecialist ? state.settings.labels.hybridSpecialist : ''].filter(Boolean);
+    const tags = [
+      { text: store.serviceMeta.tierLabel, className: '' },
+      { text: store.serviceMeta.importSpecialist ? state.settings.labels.importSpecialist : '', className: '' },
+      { text: store.serviceMeta.hybridSpecialist ? state.settings.labels.hybridSpecialist : '', className: 'hybrid' }
+    ].filter(tag => tag.text);
     const shownDistance = distanceLabel(store, state.recommendationMode !== 'direct');
     const distance = shownDistance ? `<em class="distance">${state.recommendationMode === 'district-fallback' ? '距行政區中心' : '距目前位置'}約 ${shownDistance}</em>` : '';
-    button.innerHTML = `<div><h3>${store.name}</h3>${distance}<p>${store.area}${store.zone}${store.address}<br>${store.businessHours || '營業時間請電話洽詢'}</p><div class="mini-badges">${tags.map(tag => `<span>${tag}</span>`).join('')}</div></div><div class="store-score"><b>${store.rating === null ? '—' : `★ ${store.rating.toFixed(1)}`}</b><small>${store.reviewCount === null ? '尚無評論資料' : `${store.reviewCount.toLocaleString('zh-TW')} 則`}</small></div>`;
+    button.innerHTML = `<div><h3>${store.name}</h3>${distance}<p>${store.area}${store.zone}${store.address}<br>${store.businessHours || '營業時間請電話洽詢'}</p><div class="mini-badges">${tags.map(tag => `<span class="${tag.className}">${tag.text}</span>`).join('')}</div></div><div class="store-score"><b>${store.rating === null ? '—' : `★ ${store.rating.toFixed(1)}`}</b><small>${store.reviewCount === null ? '尚無評論資料' : `${store.reviewCount.toLocaleString('zh-TW')} 則`}</small></div>`;
     button.addEventListener('click', () => selectStore(store)); return button;
   }));
   if (!state.filtered.length) list.innerHTML = '<p class="availability-note">沒有符合條件的據點，請調整地區或搜尋文字。</p>';
@@ -68,9 +72,9 @@ function renderRecommendation() {
   const notice = $('bookingRecommendation');
   if (state.recommendationMode === 'direct') { notice.hidden = true; return; }
   notice.hidden = false; const place = `${$('bookingArea').value}${$('bookingZone').value}`;
-  notice.querySelector('strong').textContent = `${place}尚無據點，以下推薦鄰近店家`;
+  notice.querySelector('strong').textContent = `${place}目前沒有加盟店`;
   if (state.recommendationMode === 'location-fallback') { notice.querySelector('span').textContent = '以下已依你的目前位置推薦最近據點。'; notice.querySelector('button').hidden = true; }
-  else { notice.querySelector('span').textContent = '開啟定位會更準確'; notice.querySelector('button').hidden = false; }
+  else { notice.querySelector('span').textContent = '以下依行政區中心推薦鄰近據點；開啟定位會更準確。'; notice.querySelector('button').hidden = false; }
 }
 
 function selectStore(store) {
