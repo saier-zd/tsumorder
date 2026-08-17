@@ -68,9 +68,9 @@ function renderRecommendation() {
   const notice = $('recommendationNotice');
   if (state.recommendationMode === 'direct') { notice.hidden = true; return; }
   const area = $('area').value; const zone = $('zone').value; notice.hidden = false;
-  notice.querySelector('strong').textContent = `${area}${zone}目前沒有加盟店`;
+  notice.querySelector('strong').textContent = `${area}${zone}目前沒有加盟店，以下推薦鄰近店家`;
   if (state.recommendationMode === 'location-fallback') { notice.querySelector('span').textContent = '已依你的目前位置推薦最近的 SUM 據點。'; notice.querySelector('button').hidden = true; }
-  else { notice.querySelector('span').textContent = '以下依行政區中心推薦鄰近店家；開啟定位會更精準。'; notice.querySelector('button').hidden = false; }
+  else { notice.querySelector('span').textContent = '開啟定位會更精準。'; notice.querySelector('button').hidden = false; }
 }
 
 function render() {
