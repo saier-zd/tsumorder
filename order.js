@@ -68,7 +68,7 @@ function renderRecommendation() {
   const notice = $('bookingRecommendation');
   if (state.recommendationMode === 'direct') { notice.hidden = true; return; }
   notice.hidden = false; const place = `${$('bookingArea').value}${$('bookingZone').value}`;
-  notice.querySelector('strong').textContent = `${place}目前沒有加盟店，以下依行政區中心推薦鄰近據點`;
+  notice.querySelector('strong').textContent = `${place}尚無據點，以下推薦鄰近店家`;
   if (state.recommendationMode === 'location-fallback') { notice.querySelector('span').textContent = '以下已依你的目前位置推薦最近據點。'; notice.querySelector('button').hidden = true; }
   else { notice.querySelector('span').textContent = '開啟定位會更準確'; notice.querySelector('button').hidden = false; }
 }
